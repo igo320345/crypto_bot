@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  bot:
+    image: python:3
+    volumes:
+      - $PWD:/crypto_bot
+    command: sh -c "pip install -r crypto_bot/requirements.txt && python crypto_bot/main.py"
