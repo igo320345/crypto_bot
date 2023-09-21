@@ -9,27 +9,21 @@ router = Router()
 service = CoinMarketCapService()
 
 @router.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
+async def command_start_handler(message: Message):
     await message.answer(f"Hello, {hbold(message.from_user.full_name)}!")
 
 @router.message(Command('top_coins'))
-async def top_coins_handler(message: Message) -> None:
-    top_coins = ''
-    for coin in service.top_coins():
-        top_coins += f'#{coin.rank} {coin.name}\n'
-    await message.answer(top_coins)
+async def top_coins_handler(message: Message):
+    # TODO
+    pass
 
-@router.message(Command('coin_quotes'))
-async def coin_quotes_handler(message: Message, command: CommandObject) -> None:
-    coin = service.coin_quotes(command.args)
-    await message.answer(f"#{coin.rank} {coin.name}\n{coin.quote['USD']['price']}")
-
-@router.message(Command('coin_logo'))
-async def coin_logo_handler(message: Message, command: CommandObject) -> None:
-    coin_logo_url = service.coin_logo(command.args)
-    await message.answer_photo(coin_logo_url)
-
-@router.message(Command('coin_website'))
-async def coin_website_handler(message: Message, command: CommandObject) -> None:
-    coin_website_url = service.coin_website(command.args)
-    await message.answer(coin_website_url)
+@router.message(Command('coin_info'))
+async def coin_info(message: Message, command: CommandObject):
+    coin = service.coin_info(command.args)
+    if coin != None:
+        coin_description = f'#{coin.rank} {coin.name} - {coin.symbol}\n\
+        {coin.website_url}\nPrice: {coin.quote.price}\nMarker Dominance:\
+        {coin.quote.market_cap_dominance}'
+        await message.answer_photo(coin.logo_url, caption = coin_description)
+    else:
+        await message.answer('not found')
