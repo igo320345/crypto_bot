@@ -24,20 +24,28 @@ async def top_coins_handler(message: Message):
 
 @router.message(Command('coin_info'))
 async def coin_info_handler(message: Message, command: CommandObject):
-    coin = service.coin_info(command.args)
-    if coin != None:
-        coin_description = f'#{coin.rank} {hbold(coin.name)} - {coin.symbol}\n{coin.website_url}\nPrice: {coin.quote.price}\nMarker Dominance: {coin.quote.market_cap_dominance}'
-        await message.answer_photo(coin.logo_url, caption = coin_description)
-    else:
-        await message.answer('not found')
+    await coin_info(message, command.args)
 
 async def update_coin_list(message: Message, amount: int):
     coin_list = service.top_coins(amount)
     await message.edit_text('Top cryptocurrencies by market cap:',
                             reply_markup=coin_list_keyboard(coin_list))
+
+async def coin_info(message: Message, coin: str):
+    coin = service.coin_info(coin)
+    if coin != None:
+        coin_description = f'#{coin.rank} {hbold(coin.name)} - {coin.symbol}\n{coin.website_url}\nPrice: {coin.quote.price}\nMarker Dominance: {coin.quote.market_cap_dominance}'
+        await message.answer_photo(coin.logo_url, caption = coin_description)
+    else:
+        await message.answer('not found')
     
 @router.callback_query(F.data == 'load_more')
-async def load_more_coins(callback: CallbackQuery):
-    amount = user_data.get(callback.message.from_user.id, 10)
-    user_data[callback.message.from_user.id] = amount + 10
+async def load_more_callback(callback: CallbackQuery):
+    amount = user_data.get(callback.from_user.id, 10)
+    user_data[callback.from_user.id] = amount + 10
     await update_coin_list(callback.message, amount + 10)
+
+@router.callback_query(F.data.startswith('coin_info'))
+async def coin_info_callback(callback: CallbackQuery):
+    coin = callback.data.split('_')[2]
+    await coin_info(callback.message, coin)
