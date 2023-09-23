@@ -1,10 +1,15 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command, CommandObject
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.markdown import hbold
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 
 from services.coinmarketcap_service import CoinMarketCapService
 from keyboards.top_coins_keyboard import coin_list_keyboard
+
+class CoinInfoState(StatesGroup):
+    entering_coin_name = State()
 
 router = Router()
 service = CoinMarketCapService()
@@ -23,8 +28,14 @@ async def top_coins_handler(message: Message):
                           reply_markup=coin_list_keyboard(coin_list))
 
 @router.message(Command('coin_info'))
-async def coin_info_handler(message: Message, command: CommandObject):
-    await coin_info(message, command.args)
+async def coin_info_handler(message: Message, state: FSMContext):
+    await message.answer('Enter cryptocurrency name: ')
+    await state.set_state(CoinInfoState.entering_coin_name)
+
+@router.message(CoinInfoState.entering_coin_name)
+async def entered_coin_name(message: Message, state: FSMContext):
+    await coin_info(message, message.text.lower())
+    await state.clear()
 
 async def update_coin_list(message: Message, amount: int):
     coin_list = service.top_coins(amount)
