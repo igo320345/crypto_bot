@@ -26,7 +26,11 @@ async def entered_coin_name(message: Message, state: FSMContext):
 async def coin_info(message: Message, coin: str):
     coin = service.coin_info(coin)
     if coin != None:
-        coin_description = f'#{coin.rank} {hbold(coin.name)} - {coin.symbol}\n{coin.website_url}\nPrice: {coin.quote.price}\nMarker Dominance: {coin.quote.market_cap_dominance}'
+        percent_change_1h = f'Percent change 1h : {"🟩" if coin.quote.percent_change_1h > 0 else "🟥"} {coin.quote.percent_change_1h}'
+        percent_change_24h = f'Percent change 24h : {"🟩" if coin.quote.percent_change_24h > 0 else "🟥"} {coin.quote.percent_change_24h}'
+        percent_change_7d = f'Percent change 7d : {"🟩" if coin.quote.percent_change_7d > 0 else "🟥"} {coin.quote.percent_change_7d}'
+        quote = f'Price: {coin.quote.price}\nMarket Cap: {coin.quote.market_cap}\nMarket Dominance: {coin.quote.market_cap_dominance}\n{percent_change_1h}\n{percent_change_24h}\n{percent_change_7d}\nVolume 24h: {coin.quote.volume_24h}'
+        coin_description = f'#{coin.rank} {hbold(coin.name)} - {coin.symbol}\n{coin.website_url}\n{quote}'
         await message.answer_photo(coin.logo_url, caption = coin_description)
     else:
         await message.answer('not found')
